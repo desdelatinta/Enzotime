@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Banco de Energía</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#0a0e27;
+    --bg-panel:#131a3d;
+    --bg-panel-2:#1a2350;
+    --neon-blue:#00e0ff;
+    --neon-blue-dim:#0088a3;
+    --neon-purple:#b14aed;
+    --gold:#ffd23f;
+    --green:#3ddc84;
+    --red:#ff4757;
+    --text:#eef1ff;
+    --text-dim:#8b93c4;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(177,74,237,0.25), transparent 40%),
+      radial-gradient(circle at 85% 85%, rgba(0,224,255,0.18), transparent 45%),
+      var(--bg-deep);
+    font-family:'Rubik',sans-serif;
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    overflow-x:hidden;
+  }
+  .card{
+    width:100%;
+    max-width:420px;
+    background:linear-gradient(180deg, var(--bg-panel), var(--bg-panel-2));
+    border:2px solid rgba(0,224,255,0.25);
+    border-radius:28px;
+    padding:28px 22px 26px;
+    box-shadow:0 0 0 1px rgba(255,255,255,0.02) inset, 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(0,224,255,0.06);
+    position:relative;
+  }
+  .eyebrow{
+    text-align:center;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    letter-spacing:2px;
+    font-size:13px;
+    color:var(--neon-blue);
+    text-transform:uppercase;
+    margin-bottom:2px;
+    opacity:0.9;
+  }
+  h1{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:26px;
+    text-align:center;
+    margin:0 0 22px;
+    background:linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+
+  .ring-wrap{
+    position:relative;
+    width:230px;
+    height:230px;
+    margin:0 auto 8px;
+  }
+  svg{transform:rotate(-90deg);}
+  .ring-bg{fill:none;stroke:rgba(255,255,255,0.06);stroke-width:14;}
+  .ring-fg{
+    fill:none;
+    stroke-width:14;
+    stroke-linecap:round;
+    transition:stroke-dashoffset 0.6s ease, stroke 0.4s ease;
+  }
+  .ring-center{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+  }
+  .level-badge{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:12px;
+    color:var(--gold);
+    letter-spacing:1px;
+    text-transform:uppercase;
+    margin-bottom:2px;
+  }
+  .time-display{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:38px;
+    line-height:1;
+    letter-spacing:1px;
+    font-variant-numeric:tabular-nums;
+  }
+  .time-sub{
+    font-size:12px;
+    color:var(--text-dim);
+    margin-top:6px;
+    font-weight:500;
+  }
+
+  .status-line{
+    text-align:center;
+    min-height:22px;
+    font-weight:700;
+    font-size:14px;
+    margin:14px 0 18px;
+    transition:color 0.3s;
+  }
+  .status-line.study{color:var(--green);}
+  .status-line.play{color:var(--red);}
+  .status-line.idle{color:var(--text-dim);font-weight:500;}
+
+  .buttons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  button{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    border:none;
+    border-radius:16px;
+    padding:16px 8px;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    transition:transform 0.12s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    color:#0a0e27;
+  }
+  button:active{transform:scale(0.96);}
+  button:disabled{opacity:0.35;cursor:not-allowed;filter:grayscale(0.3);}
+  .btn-study{
+    background:linear-gradient(180deg, #4ef0a0, var(--green));
+    box-shadow:0 6px 0 #229d5b, 0 8px 20px rgba(61,220,132,0.25);
+  }
+  .btn-study.active{
+    box-shadow:0 3px 0 #229d5b, 0 0 0 3px rgba(61,220,132,0.5), 0 0 25px rgba(61,220,132,0.6);
+    transform:translateY(3px);
+  }
+  .btn-play{
+    background:linear-gradient(180deg, #4fc9ff, var(--neon-blue));
+    box-shadow:0 6px 0 #0088a3, 0 8px 20px rgba(0,224,255,0.25);
+  }
+  .btn-play.active{
+    box-shadow:0 3px 0 #0088a3, 0 0 0 3px rgba(255,71,87,0.6), 0 0 25px rgba(255,71,87,0.7);
+    transform:translateY(3px);
+    background:linear-gradient(180deg, #ff8a94, var(--red));
+  }
+  .btn-icon{font-size:22px;}
+
+  .stop-row{
+    margin-top:12px;
+    display:flex;
+    justify-content:center;
+  }
+  .stop-btn{
+    background:transparent;
+    color:var(--text-dim);
+    border:1.5px solid rgba(255,255,255,0.15);
+    border-radius:12px;
+    padding:8px 20px;
+    font-size:13px;
+    font-weight:500;
+    box-shadow:none;
+  }
+  .stop-btn:active{transform:scale(0.96);}
+
+  .challenge-box{
+    margin-top:20px;
+    background:rgba(255,210,63,0.06);
+    border:1.5px solid rgba(255,210,63,0.3);
+    border-radius:18px;
+    padding:16px 16px 14px;
+  }
+  .challenge-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:4px;
+  }
+  .challenge-title{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    color:var(--gold);
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .edit-link{
+    background:transparent;
+    border:none;
+    color:var(--text-dim);
+    font-size:12px;
+    font-weight:500;
+    cursor:pointer;
+    padding:4px 6px;
+    box-shadow:none;
+    text-decoration:underline;
+  }
+  .edit-link:active{transform:scale(0.95);}
+  .challenge-reward{
+    font-size:13px;
+    color:var(--text);
+    margin-bottom:10px;
+    font-weight:500;
+  }
+  .challenge-bar-track{
+    width:100%;
+    height:14px;
+    background:rgba(255,255,255,0.08);
+    border-radius:10px;
+    overflow:hidden;
+    position:relative;
+  }
+  .challenge-bar-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--gold), #ff9f43);
+    border-radius:10px;
+    transition:width 0.6s ease;
+  }
+  .challenge-bar-label{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+    color:var(--text-dim);
+    margin-top:6px;
+    font-weight:500;
+  }
+  .challenge-empty{
+    text-align:center;
+    padding:6px 0 2px;
+  }
+  .challenge-empty button{
+    background:linear-gradient(180deg, #ffe27a, var(--gold));
+    box-shadow:0 5px 0 #c99a1a;
+    padding:10px 20px;
+    font-size:13px;
+    margin:6px auto 0;
+  }
+  .challenge-empty p{
+    font-size:12px;
+    color:var(--text-dim);
+    margin:0;
+  }
+  .challenge-completed{
+    text-align:center;
+    color:var(--gold);
+    font-weight:700;
+    font-size:13px;
+  }
+
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(5,7,20,0.75);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:70;
+    padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    width:100%;
+    max-width:340px;
+    background:linear-gradient(180deg, var(--bg-panel), var(--bg-panel-2));
+    border:2px solid rgba(255,210,63,0.3);
+    border-radius:22px;
+    padding:22px 20px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  }
+  .modal-box h3{
+    font-family:'Baloo 2',sans-serif;
+    font-size:18px;
+    margin:0 0 16px;
+    color:var(--gold);
+    text-align:center;
+  }
+  .field-label{
+    font-size:12px;
+    font-weight:600;
+    color:var(--text-dim);
+    margin-bottom:6px;
+    display:block;
+  }
+  .field-group{margin-bottom:14px;}
+  .modal-box input[type="number"],
+  .modal-box input[type="text"]{
+    width:100%;
+    padding:11px 12px;
+    border-radius:12px;
+    border:1.5px solid rgba(255,255,255,0.15);
+    background:rgba(255,255,255,0.05);
+    color:var(--text);
+    font-family:'Rubik',sans-serif;
+    font-size:14px;
+    outline:none;
+  }
+  .modal-box input:focus{border-color:var(--gold);}
+  .modal-actions{
+    display:flex;
+    gap:10px;
+    margin-top:18px;
+  }
+  .modal-actions button{
+    flex:1;
+    padding:12px 8px;
+    font-size:13px;
+  }
+  .btn-save{
+    background:linear-gradient(180deg, #ffe27a, var(--gold));
+    box-shadow:0 5px 0 #c99a1a;
+  }
+  .btn-cancel{
+    background:transparent;
+    border:1.5px solid rgba(255,255,255,0.15);
+    color:var(--text-dim);
+    box-shadow:none;
+  }
+  .btn-delete{
+    background:transparent;
+    border:1.5px solid rgba(255,71,87,0.4);
+    color:var(--red);
+    box-shadow:none;
+    width:100%;
+    margin-top:10px;
+    padding:10px;
+    font-size:12px;
+  }
+
+  .confetti-piece{
+    position:fixed;
+    top:-10px;
+    width:8px;
+    height:14px;
+    z-index:80;
+    pointer-events:none;
+    animation:confettiFall linear forwards;
+  }
+  @keyframes confettiFall{
+    to{ transform:translateY(110vh) rotate(540deg); opacity:0.9; }
+  }
+
+  .quick-chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .chip{
+    flex:1 1 auto;
+    min-width:52px;
+    padding:11px 6px;
+    border-radius:12px;
+    font-size:13px;
+    font-weight:700;
+    font-family:'Baloo 2',sans-serif;
+    border:none;
+    cursor:pointer;
+    color:#0a0e27;
+  }
+  .chip:active{transform:scale(0.92);}
+  .chip-neg{background:linear-gradient(180deg,#ff8a94,var(--red));box-shadow:0 4px 0 #b23139;}
+  .chip-pos{background:linear-gradient(180deg,#4ef0a0,var(--green));box-shadow:0 4px 0 #229d5b;}
+  .custom-row{
+    display:flex;
+    gap:8px;
+    align-items:stretch;
+  }
+  .custom-row input{flex:1;}
+  .custom-row button{
+    padding:11px 14px;
+    font-size:13px;
+    white-space:nowrap;
+  }
+  .checkbox-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin:16px 0 2px;
+    font-size:12px;
+    color:var(--text-dim);
+    font-weight:500;
+  }
+  .checkbox-row input{width:17px;height:17px;accent-color:var(--gold);}
+  .adjust-row{
+    margin-top:10px;
+    display:flex;
+    justify-content:center;
+  }
+  .adjust-link{
+    background:transparent;
+    color:var(--text-dim);
+    border:1.5px solid rgba(255,255,255,0.15);
+    border-radius:12px;
+    padding:8px 20px;
+    font-size:13px;
+    font-weight:500;
+    box-shadow:none;
+  }
+  .adjust-link:active{transform:scale(0.96);}
+
+  .flash-overlay{
+    position:fixed;
+    inset:0;
+    background:radial-gradient(circle, rgba(255,71,87,0.35), rgba(10,14,39,0.92));
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:50;
+    animation:flashPulse 0.5s ease;
+  }
+  .flash-overlay.show{display:flex;}
+  @keyframes flashPulse{
+    0%{opacity:0;}
+    100%{opacity:1;}
+  }
+  .flash-content{
+    text-align:center;
+    animation:shake 0.4s ease;
+  }
+  .flash-content h2{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:30px;
+    color:var(--red);
+    margin:0 0 8px;
+    text-shadow:0 0 20px rgba(255,71,87,0.7);
+  }
+  .flash-content p{
+    color:var(--text-dim);
+    font-size:15px;
+    margin:0 0 20px;
+  }
+  .flash-content button{
+    background:linear-gradient(180deg, #4ef0a0, var(--green));
+    box-shadow:0 6px 0 #229d5b;
+    padding:14px 28px;
+  }
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-8px);}
+    40%{transform:translateX(8px);}
+    60%{transform:translateX(-6px);}
+    80%{transform:translateX(6px);}
+  }
+
+  .levelup-toast{
+    position:fixed;
+    top:24px;
+    left:50%;
+    transform:translateX(-50%) translateY(-20px);
+    background:linear-gradient(90deg, var(--neon-purple), var(--neon-blue));
+    padding:12px 22px;
+    border-radius:14px;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    opacity:0;
+    transition:all 0.4s ease;
+    z-index:60;
+    box-shadow:0 10px 30px rgba(177,74,237,0.4);
+    pointer-events:none;
+  }
+  .levelup-toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+
+  .loading{
+    text-align:center;
+    color:var(--text-dim);
+    font-size:13px;
+    padding:20px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card" id="card" style="display:none;">
+  <div class="eyebrow">Chowart · Sala de energía</div>
+  <h1>Banco de Energía</h1>
+
+  <div class="ring-wrap">
+    <svg width="230" height="230" viewBox="0 0 230 230">
+      <circle class="ring-bg" cx="115" cy="115" r="100"></circle>
+      <circle class="ring-fg" id="ringFg" cx="115" cy="115" r="100"
+              stroke="url(#gradBlue)"
+              stroke-dasharray="628"
+              stroke-dashoffset="628"></circle>
+      <defs>
+        <linearGradient id="gradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#00e0ff"/>
+          <stop offset="100%" stop-color="#b14aed"/>
+        </linearGradient>
+        <linearGradient id="gradRed" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ff4757"/>
+          <stop offset="100%" stop-color="#ff9f43"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <div class="ring-center">
+      <div class="level-badge" id="levelBadge">Nivel 0</div>
+      <div class="time-display" id="timeDisplay">00:00:00</div>
+      <div class="time-sub">tiempo disponible</div>
+    </div>
+  </div>
+
+  <div class="status-line idle" id="statusLine">Listo para empezar</div>
+
+  <div class="buttons">
+    <button class="btn-study" id="btnStudy">
+      <span class="btn-icon">📚</span>
+      ESTUDIAR
+    </button>
+    <button class="btn-play" id="btnPlay">
+      <span class="btn-icon">🎮</span>
+      JUGAR
+    </button>
+  </div>
+
+  <div class="stop-row">
+    <button class="stop-btn" id="btnStop" style="display:none;">⏸ Detener</button>
+  </div>
+
+  <div class="adjust-row">
+    <button class="adjust-link" id="btnOpenAdjust">✏️ Ajustar tiempo manualmente</button>
+  </div>
+
+  <div class="challenge-box" id="challengeBox">
+    <!-- rellenado por JS -->
+  </div>
+</div>
+
+<div class="loading" id="loading">Cargando tu energía...</div>
+
+<div class="modal-overlay" id="adjustModalOverlay">
+  <div class="modal-box">
+    <h3>✏️ Ajustar tiempo</h3>
+    <div class="quick-chips">
+      <button class="chip chip-neg" data-adjust="-30">-30</button>
+      <button class="chip chip-neg" data-adjust="-10">-10</button>
+      <button class="chip chip-neg" data-adjust="-5">-5</button>
+      <button class="chip chip-pos" data-adjust="5">+5</button>
+      <button class="chip chip-pos" data-adjust="10">+10</button>
+      <button class="chip chip-pos" data-adjust="30">+30</button>
+    </div>
+    <label class="field-label">Cantidad personalizada (minutos)</label>
+    <div class="custom-row">
+      <input type="number" id="inputCustomMinutes" min="1" placeholder="Ej: 45">
+      <button class="btn-cancel" id="btnCustomMinus">➖ Quitar</button>
+      <button class="btn-save" id="btnCustomPlus">➕ Añadir</button>
+    </div>
+    <label class="checkbox-row">
+      <input type="checkbox" id="chkApplyChallenge" checked>
+      Sumar también al reto (si añades tiempo)
+    </label>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="adjustModalClose" style="flex:1;">Listo</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <h3>🏆 Configurar reto</h3>
+    <div class="field-group">
+      <label class="field-label">Minutos de estudio para el reto</label>
+      <input type="number" id="inputTargetMinutes" min="1" placeholder="Ej: 1000">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Premio</label>
+      <input type="text" id="inputReward" placeholder="Ej: Una tarjeta de Roblox">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="modalCancel">Cancelar</button>
+      <button class="btn-save" id="modalSave">Guardar</button>
+    </div>
+    <button class="btn-delete" id="modalDelete" style="display:none;">Eliminar reto</button>
+  </div>
+</div>
+
+<div class="flash-overlay" id="flashOverlay">
+  <div class="flash-content">
+    <h2>⚡ SIN ENERGÍA ⚡</h2>
+    <p>Se acabó el tiempo de juego.<br>¡Hora de estudiar para recargar!</p>
+    <button id="flashClose">Entendido</button>
+  </div>
+</div>
+
+<div class="levelup-toast" id="levelupToast">🎉 ¡Subiste de nivel!</div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'kid-timer:total-seconds';
+  const CIRC = 2 * Math.PI * 100; // ~628.3
+  const SECONDS_PER_LEVEL = 3600; // 1 hour ring = 1 level
+
+  let totalSeconds = 0;
+  let mode = 'idle'; // idle | study | play
+  let tickInterval = null;
+  let saveTimeout = null;
+  let audioCtx = null;
+
+  const el = {
+    card: document.getElementById('card'),
+    loading: document.getElementById('loading'),
+    ringFg: document.getElementById('ringFg'),
+    levelBadge: document.getElementById('levelBadge'),
+    timeDisplay: document.getElementById('timeDisplay'),
+    statusLine: document.getElementById('statusLine'),
+    btnStudy: document.getElementById('btnStudy'),
+    btnPlay: document.getElementById('btnPlay'),
+    btnStop: document.getElementById('btnStop'),
+    flashOverlay: document.getElementById('flashOverlay'),
+    flashClose: document.getElementById('flashClose'),
+    levelupToast: document.getElementById('levelupToast'),
+    challengeBox: document.getElementById('challengeBox'),
+    modalOverlay: document.getElementById('modalOverlay'),
+    inputTargetMinutes: document.getElementById('inputTargetMinutes'),
+    inputReward: document.getElementById('inputReward'),
+    modalSave: document.getElementById('modalSave'),
+    modalCancel: document.getElementById('modalCancel'),
+    modalDelete: document.getElementById('modalDelete'),
+    btnOpenAdjust: document.getElementById('btnOpenAdjust'),
+    adjustModalOverlay: document.getElementById('adjustModalOverlay'),
+    adjustModalClose: document.getElementById('adjustModalClose'),
+    inputCustomMinutes: document.getElementById('inputCustomMinutes'),
+    btnCustomMinus: document.getElementById('btnCustomMinus'),
+    btnCustomPlus: document.getElementById('btnCustomPlus'),
+    chkApplyChallenge: document.getElementById('chkApplyChallenge'),
+  };
+
+  let challenge = null; // { targetMinutes, rewardText, progressSeconds, completed }
+
+  function formatTime(totalSec){
+    const s = Math.max(0, Math.round(totalSec));
+    const h = Math.floor(s/3600);
+    const m = Math.floor((s%3600)/60);
+    const sec = s%60;
+    return [h,m,sec].map(v=>String(v).padStart(2,'0')).join(':');
+  }
+
+  function getAudioCtx(){
+    if(!audioCtx){
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function beep(freqStart, freqEnd, duration, type){
+    try{
+      const ctx = getAudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type || 'square';
+      osc.frequency.setValueAtTime(freqStart, ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(freqEnd, ctx.currentTime + duration);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    }catch(e){ /* audio not available, ignore */ }
+  }
+
+  function playLevelUpSound(){
+    beep(440, 880, 0.15, 'square');
+    setTimeout(()=>beep(660, 1100, 0.18, 'square'), 130);
+  }
+
+  function playAlarmSound(){
+    beep(700, 200, 0.3, 'sawtooth');
+    setTimeout(()=>beep(700, 200, 0.3, 'sawtooth'), 350);
+    setTimeout(()=>beep(700, 200, 0.3, 'sawtooth'), 700);
+  }
+
+  function showLevelUpToast(){
+    el.levelupToast.classList.add('show');
+    setTimeout(()=> el.levelupToast.classList.remove('show'), 1800);
+  }
+
+  function renderChallenge(){
+    if(!challenge || !challenge.targetMinutes){
+      el.challengeBox.innerHTML = `
+        <div class="challenge-empty">
+          <div class="challenge-title">🏆 Reto</div>
+          <p>Crea un reto de minutos de estudio con un premio al final.</p>
+          <button id="btnNewChallenge">+ Crear reto</button>
+        </div>`;
+      document.getElementById('btnNewChallenge').addEventListener('click', ()=> openModal());
+      return;
+    }
+    const targetSeconds = challenge.targetMinutes * 60;
+    const pct = Math.min(100, (challenge.progressSeconds / targetSeconds) * 100);
+    const doneMin = Math.floor(challenge.progressSeconds / 60);
+
+    if(challenge.completed){
+      el.challengeBox.innerHTML = `
+        <div class="challenge-header">
+          <div class="challenge-title">🏆 Reto</div>
+          <button class="edit-link" id="btnEditChallenge">nuevo reto</button>
+        </div>
+        <div class="challenge-completed">🎉 ¡Reto cumplido! Premio: ${escapeHtml(challenge.rewardText || 'sorpresa')}</div>`;
+      document.getElementById('btnEditChallenge').addEventListener('click', ()=> openModal());
+      return;
+    }
+
+    el.challengeBox.innerHTML = `
+      <div class="challenge-header">
+        <div class="challenge-title">🏆 Reto</div>
+        <button class="edit-link" id="btnEditChallenge">editar</button>
+      </div>
+      <div class="challenge-reward">Premio: ${escapeHtml(challenge.rewardText || 'sorpresa')}</div>
+      <div class="challenge-bar-track">
+        <div class="challenge-bar-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="challenge-bar-label">
+        <span>${doneMin} / ${challenge.targetMinutes} min</span>
+        <span>${pct.toFixed(0)}%</span>
+      </div>`;
+    document.getElementById('btnEditChallenge').addEventListener('click', ()=> openModal());
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function openModal(){
+    el.inputTargetMinutes.value = challenge && challenge.targetMinutes ? challenge.targetMinutes : '';
+    el.inputReward.value = challenge && challenge.rewardText ? challenge.rewardText : '';
+    el.modalDelete.style.display = (challenge && challenge.targetMinutes) ? 'block' : 'none';
+    el.modalOverlay.classList.add('show');
+  }
+  function closeModal(){
+    el.modalOverlay.classList.remove('show');
+  }
+
+  function saveChallengeFromModal(){
+    const minutes = parseInt(el.inputTargetMinutes.value, 10);
+    const reward = el.inputReward.value.trim();
+    if(!minutes || minutes <= 0){
+      el.inputTargetMinutes.focus();
+      return;
+    }
+    challenge = {
+      targetMinutes: minutes,
+      rewardText: reward,
+      progressSeconds: 0,
+      completed: false
+    };
+    closeModal();
+    renderChallenge();
+    scheduleSave();
+  }
+
+  function deleteChallenge(){
+    challenge = null;
+    closeModal();
+    renderChallenge();
+    scheduleSave();
+  }
+
+  function launchConfetti(){
+    const colors = ['#ffd23f','#00e0ff','#b14aed','#3ddc84','#ff4757'];
+    for(let i=0;i<40;i++){
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random()*100 + 'vw';
+      piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+      piece.style.animationDuration = (2 + Math.random()*1.5) + 's';
+      piece.style.opacity = String(0.7 + Math.random()*0.3);
+      document.body.appendChild(piece);
+      setTimeout(()=> piece.remove(), 3800);
+    }
+  }
+
+  function checkChallengeCompletion(){
+    if(!challenge || challenge.completed) return;
+    const targetSeconds = challenge.targetMinutes * 60;
+    if(challenge.progressSeconds >= targetSeconds){
+      challenge.completed = true;
+      playLevelUpSound();
+      launchConfetti();
+      renderChallenge();
+    }
+  }
+
+  el.modalSave.addEventListener('click', saveChallengeFromModal);
+  el.modalCancel.addEventListener('click', closeModal);
+  el.modalDelete.addEventListener('click', deleteChallenge);
+  el.modalOverlay.addEventListener('click', (e)=>{ if(e.target === el.modalOverlay) closeModal(); });
+
+  function applyManualAdjustment(minutes){
+    if(!minutes) return;
+    const seconds = Math.round(minutes * 60);
+    totalSeconds = Math.max(0, totalSeconds + seconds);
+
+    if(seconds > 0 && el.chkApplyChallenge.checked && challenge && !challenge.completed){
+      challenge.progressSeconds = Math.min(
+        challenge.targetMinutes * 60,
+        challenge.progressSeconds + seconds
+      );
+      checkChallengeCompletion();
+    }
+    prevLevelRef.value = Math.floor(totalSeconds / SECONDS_PER_LEVEL);
+    render();
+    renderChallenge();
+    scheduleSave();
+  }
+
+  document.querySelectorAll('.chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      applyManualAdjustment(parseInt(chip.dataset.adjust, 10));
+    });
+  });
+
+  el.btnOpenAdjust.addEventListener('click', ()=>{
+    el.inputCustomMinutes.value = '';
+    el.adjustModalOverlay.classList.add('show');
+  });
+  el.adjustModalClose.addEventListener('click', ()=>{
+    el.adjustModalOverlay.classList.remove('show');
+  });
+  el.adjustModalOverlay.addEventListener('click', (e)=>{
+    if(e.target === el.adjustModalOverlay) el.adjustModalOverlay.classList.remove('show');
+  });
+  el.btnCustomPlus.addEventListener('click', ()=>{
+    const v = parseInt(el.inputCustomMinutes.value, 10);
+    if(v > 0){ applyManualAdjustment(v); el.inputCustomMinutes.value = ''; }
+  });
+  el.btnCustomMinus.addEventListener('click', ()=>{
+    const v = parseInt(el.inputCustomMinutes.value, 10);
+    if(v > 0){ applyManualAdjustment(-v); el.inputCustomMinutes.value = ''; }
+  });
+
+  function render(){
+    const level = Math.floor(totalSeconds / SECONDS_PER_LEVEL);
+    const remainder = totalSeconds - level*SECONDS_PER_LEVEL;
+    const progress = remainder / SECONDS_PER_LEVEL;
+    const offset = CIRC * (1 - progress);
+
+    el.ringFg.setAttribute('stroke-dashoffset', offset.toFixed(1));
+    el.ringFg.setAttribute('stroke', mode === 'play' ? 'url(#gradRed)' : 'url(#gradBlue)');
+    el.levelBadge.textContent = 'Nivel ' + level;
+    el.timeDisplay.textContent = formatTime(totalSeconds);
+
+    if(mode === 'study'){
+      el.statusLine.textContent = '⬆ Sumando energía...';
+      el.statusLine.className = 'status-line study';
+    } else if(mode === 'play'){
+      el.statusLine.textContent = '⬇ Gastando energía...';
+      el.statusLine.className = 'status-line play';
+    } else {
+      el.statusLine.textContent = totalSeconds > 0 ? 'Listo para empezar' : 'Sin energía guardada';
+      el.statusLine.className = 'status-line idle';
+    }
+
+    el.btnStudy.classList.toggle('active', mode === 'study');
+    el.btnPlay.classList.toggle('active', mode === 'play');
+    el.btnStudy.disabled = (mode === 'play');
+    el.btnPlay.disabled = (mode === 'study') || totalSeconds <= 0;
+    el.btnStop.style.display = (mode === 'idle') ? 'none' : 'inline-block';
+  }
+
+  const memoryFallback = {};
+  function safeStorageGet(key){
+    try{
+      return window.localStorage.getItem(key);
+    }catch(e){
+      return memoryFallback[key] || null;
+    }
+  }
+  function safeStorageSet(key, value){
+    try{
+      window.localStorage.setItem(key, value);
+    }catch(e){
+      memoryFallback[key] = value;
+    }
+  }
+
+  function scheduleSave(){
+    if(saveTimeout) clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(()=>{
+      safeStorageSet(STORAGE_KEY, JSON.stringify({ totalSeconds, challenge }));
+    }, 800);
+  }
+
+  function stopTick(){
+    if(tickInterval){ clearInterval(tickInterval); tickInterval = null; }
+  }
+
+  function startMode(newMode){
+    if(mode === newMode) return;
+    stopTick();
+    mode = newMode;
+    const prevLevel = Math.floor(totalSeconds / SECONDS_PER_LEVEL);
+
+    tickInterval = setInterval(()=>{
+      if(mode === 'study'){
+        totalSeconds += 1;
+        if(challenge && !challenge.completed){
+          challenge.progressSeconds += 1;
+          checkChallengeCompletion();
+          renderChallenge();
+        }
+        const newLevel = Math.floor(totalSeconds / SECONDS_PER_LEVEL);
+        if(newLevel > prevLevelRef.value){
+          prevLevelRef.value = newLevel;
+          playLevelUpSound();
+          showLevelUpToast();
+        }
+      } else if(mode === 'play'){
+        totalSeconds -= 1;
+        if(totalSeconds <= 0){
+          totalSeconds = 0;
+          stopMode();
+          playAlarmSound();
+          el.flashOverlay.classList.add('show');
+        }
+      }
+      render();
+      scheduleSave();
+    }, 1000);
+
+    render();
+  }
+
+  const prevLevelRef = { value: Math.floor(totalSeconds / SECONDS_PER_LEVEL) };
+
+  function stopMode(){
+    stopTick();
+    mode = 'idle';
+    prevLevelRef.value = Math.floor(totalSeconds / SECONDS_PER_LEVEL);
+    render();
+    scheduleSave();
+  }
+
+  el.btnStudy.addEventListener('click', ()=> startMode('study'));
+  el.btnPlay.addEventListener('click', ()=>{
+    if(totalSeconds <= 0) return;
+    startMode('play');
+  });
+  el.btnStop.addEventListener('click', stopMode);
+  el.flashClose.addEventListener('click', ()=> el.flashOverlay.classList.remove('show'));
+
+  async function init(){
+    try{
+      const raw = safeStorageGet(STORAGE_KEY);
+      if(raw){
+        const parsed = JSON.parse(raw);
+        if(typeof parsed.totalSeconds === 'number' && !isNaN(parsed.totalSeconds)){
+          totalSeconds = Math.max(0, parsed.totalSeconds);
+        }
+        if(parsed.challenge && typeof parsed.challenge === 'object'){
+          challenge = parsed.challenge;
+        }
+      }
+    }catch(e){
+      totalSeconds = 0;
+    } finally {
+      prevLevelRef.value = Math.floor(totalSeconds / SECONDS_PER_LEVEL);
+      el.loading.style.display = 'none';
+      el.card.style.display = 'block';
+      renderChallenge();
+      render();
+    }
+  }
+
+  init();
+})();
+</script>
+
+</body>
+</html>
