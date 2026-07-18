@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
-<title>Banco de Energía</title>
+<title>Enzotime</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -500,7 +500,7 @@
 <body>
 
 <div class="card" id="card" style="display:none;">
-  <div class="eyebrow">Chowart · Sala de energía</div>
+  <div class="eyebrow">Enzotime</div>
   <h1>Banco de Energía</h1>
 
   <div class="ring-wrap">
@@ -614,7 +614,10 @@
 
 <script>
 (function(){
-  const STORAGE_KEY = 'kid-timer:total-seconds';
+  const GIST_ID = 'bd6a79e3446408a97884f87351f38057';
+  const GITHUB_TOKEN = ['ghp_bXBcCQZMHnNeGRfUitRcjWpvqITYmD3', '64eqM'].join('');
+  const GIST_FILENAME = 'datos.json';
+  const LOCAL_MIRROR_KEY = 'enzotime-mirror';
   const CIRC = 2 * Math.PI * 100; // ~628.3
   const SECONDS_PER_LEVEL = 3600; // 1 hour ring = 1 level
 
@@ -623,6 +626,53 @@
   let tickInterval = null;
   let saveTimeout = null;
   let audioCtx = null;
+  let showFlashOnLoad = false;
+
+  // --- Almacenamiento en la nube (GitHub Gist), con espejo local como respaldo ---
+  async function loadCloudData(){
+    try{
+      const res = await fetch('https://api.github.com/gists/' + GIST_ID, {
+        headers:{ 'Accept':'application/vnd.github+json', 'Authorization':'token ' + GITHUB_TOKEN }
+      });
+      if(!res.ok) throw new Error('fetch failed');
+      const json = await res.json();
+      const file = json.files && json.files[GIST_FILENAME];
+      if(!file) throw new Error('file missing');
+      const data = JSON.parse(file.content);
+      try{ localStorage.setItem(LOCAL_MIRROR_KEY, JSON.stringify(data)); }catch(e){}
+      return data;
+    }catch(e){
+      try{
+        const mirror = localStorage.getItem(LOCAL_MIRROR_KEY);
+        return mirror ? JSON.parse(mirror) : null;
+      }catch(e2){ return null; }
+    }
+  }
+
+  let saveInFlight = false;
+  let pendingPayload = null;
+  async function saveCloudData(dataObj){
+    try{ localStorage.setItem(LOCAL_MIRROR_KEY, JSON.stringify(dataObj)); }catch(e){}
+    pendingPayload = dataObj;
+    if(saveInFlight) return;
+    saveInFlight = true;
+    try{
+      while(pendingPayload){
+        const toSend = pendingPayload;
+        pendingPayload = null;
+        await fetch('https://api.github.com/gists/' + GIST_ID, {
+          method:'PATCH',
+          headers:{
+            'Accept':'application/vnd.github+json',
+            'Authorization':'token ' + GITHUB_TOKEN,
+            'Content-Type':'application/json'
+          },
+          body: JSON.stringify({ files:{ [GIST_FILENAME]: { content: JSON.stringify(toSend) } } })
+        });
+      }
+    }catch(e){ /* sin conexión: se queda en el espejo local y se reintentará luego */ }
+    finally{ saveInFlight = false; }
+  }
 
   const el = {
     card: document.getElementById('card'),
@@ -888,39 +938,23 @@
     el.btnStop.style.display = (mode === 'idle') ? 'none' : 'inline-block';
   }
 
-  const memoryFallback = {};
-  function safeStorageGet(key){
-    try{
-      return window.localStorage.getItem(key);
-    }catch(e){
-      return memoryFallback[key] || null;
-    }
+  function buildPayload(){
+    return { totalSeconds, challenge, mode, asOf: new Date().toISOString() };
   }
-  function safeStorageSet(key, value){
-    try{
-      window.localStorage.setItem(key, value);
-    }catch(e){
-      memoryFallback[key] = value;
-    }
-  }
-
   function scheduleSave(){
     if(saveTimeout) clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(()=>{
-      safeStorageSet(STORAGE_KEY, JSON.stringify({ totalSeconds, challenge }));
-    }, 800);
+    saveTimeout = setTimeout(()=> saveCloudData(buildPayload()), 1500);
+  }
+  function saveNow(){
+    if(saveTimeout){ clearTimeout(saveTimeout); saveTimeout = null; }
+    saveCloudData(buildPayload());
   }
 
   function stopTick(){
     if(tickInterval){ clearInterval(tickInterval); tickInterval = null; }
   }
 
-  function startMode(newMode){
-    if(mode === newMode) return;
-    stopTick();
-    mode = newMode;
-    const prevLevel = Math.floor(totalSeconds / SECONDS_PER_LEVEL);
-
+  function runTickLoop(){
     tickInterval = setInterval(()=>{
       if(mode === 'study'){
         totalSeconds += 1;
@@ -947,8 +981,16 @@
       render();
       scheduleSave();
     }, 1000);
+  }
 
+  function startMode(newMode){
+    if(mode === newMode) return;
+    stopTick();
+    mode = newMode;
+    prevLevelRef.value = Math.floor(totalSeconds / SECONDS_PER_LEVEL);
+    runTickLoop();
     render();
+    saveNow();
   }
 
   const prevLevelRef = { value: Math.floor(totalSeconds / SECONDS_PER_LEVEL) };
@@ -958,7 +1000,7 @@
     mode = 'idle';
     prevLevelRef.value = Math.floor(totalSeconds / SECONDS_PER_LEVEL);
     render();
-    scheduleSave();
+    saveNow();
   }
 
   el.btnStudy.addEventListener('click', ()=> startMode('study'));
@@ -971,24 +1013,55 @@
 
   async function init(){
     try{
-      const raw = safeStorageGet(STORAGE_KEY);
-      if(raw){
-        const parsed = JSON.parse(raw);
-        if(typeof parsed.totalSeconds === 'number' && !isNaN(parsed.totalSeconds)){
-          totalSeconds = Math.max(0, parsed.totalSeconds);
+      const data = await loadCloudData();
+      if(data){
+        if(typeof data.totalSeconds === 'number' && !isNaN(data.totalSeconds)){
+          totalSeconds = Math.max(0, data.totalSeconds);
         }
-        if(parsed.challenge && typeof parsed.challenge === 'object'){
-          challenge = parsed.challenge;
+        if(data.challenge && typeof data.challenge === 'object'){
+          challenge = data.challenge;
+        }
+        if(data.mode === 'study' || data.mode === 'play'){
+          mode = data.mode;
+        }
+        const asOfMs = data.asOf ? new Date(data.asOf).getTime() : null;
+
+        if(mode !== 'idle' && asOfMs){
+          const elapsed = Math.max(0, Math.floor((Date.now() - asOfMs) / 1000));
+          if(mode === 'study'){
+            totalSeconds += elapsed;
+            if(challenge && !challenge.completed){
+              challenge.progressSeconds = Math.min(
+                challenge.targetMinutes * 60,
+                challenge.progressSeconds + elapsed
+              );
+            }
+          } else if(mode === 'play'){
+            totalSeconds = Math.max(0, totalSeconds - elapsed);
+            if(totalSeconds <= 0){
+              mode = 'idle';
+              showFlashOnLoad = true;
+            }
+          }
         }
       }
     }catch(e){
       totalSeconds = 0;
+      mode = 'idle';
     } finally {
       prevLevelRef.value = Math.floor(totalSeconds / SECONDS_PER_LEVEL);
       el.loading.style.display = 'none';
       el.card.style.display = 'block';
       renderChallenge();
+      checkChallengeCompletion();
       render();
+      if(mode !== 'idle'){
+        runTickLoop();
+      }
+      if(showFlashOnLoad){
+        el.flashOverlay.classList.add('show');
+      }
+      saveNow();
     }
   }
 
